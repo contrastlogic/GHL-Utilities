@@ -1,5 +1,5 @@
 // ghl-utils.js
-// == GHL Utility Kit v1.1 ==
+// == GHL Utility Kit v1.11 ==
 // Generic DOM + GSAP helpers for GoHighLevel
 
 class GHLUtility {
@@ -51,6 +51,41 @@ class GHLUtility {
       sections: document.querySelectorAll('.c-section'),
       rows:     document.querySelectorAll('.c-row'),
       wrappers: document.querySelectorAll('.c-wrapper')
+    };
+  }
+
+  /**
+   * Tell ScrollTrigger to use a custom smooth-scroll instance instead of window.scrollY,
+   * and push ScrollTrigger.update() on each frame.
+   *
+   * @param {object} customScroll   Your CustomSmoothScroll instance
+   */
+  static initScrollTriggerProxy(customScroll) {
+    if (!gsap || !gsap.ScrollTrigger) return;
+
+    // Proxy window scroll calls to your custom scroll
+    gsap.ScrollTrigger.scrollerProxy(window, {
+      scrollTop(value) {
+        if (arguments.length) {
+          customScroll.restart(value);
+        }
+        return customScroll.currentScroll;
+      },
+      getBoundingClientRect() {
+        return {
+          top:    0,
+          left:   0,
+          width:  window.innerWidth,
+          height: window.innerHeight
+        };
+      }
+    });
+
+    // Monkey-patch the smoothScrollLoop to also call ScrollTrigger.update()
+    const originalLoop = customScroll.smoothScrollLoop.bind(customScroll);
+    customScroll.smoothScrollLoop = function() {
+      originalLoop();
+      gsap.ScrollTrigger.update();
     };
   }
 

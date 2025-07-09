@@ -89,6 +89,49 @@ class GHLUtility {
     };
   }
 
+  /**
+ * A simple “JS‐driven” smooth scroll that hijacks wheel/touch
+ */
+class CustomSmoothScroll {
+  constructor() {
+    this.currentScroll = 0;
+    this.targetScroll  = 0;
+    this.smoothness    = window.innerWidth < 750 ? 0.03 : 0.056;
+    this._binded       = {};
+    this.init();
+  }
+  init() {
+    document.body.style.overflow = 'hidden';
+    this._binded.onWheel = e => { 
+      e.preventDefault(); 
+      this.targetScroll = Math.max(0, Math.min(this.targetScroll + e.deltaY, document.body.scrollHeight - window.innerHeight));
+    };
+    window.addEventListener('wheel', this._binded.onWheel, { passive: false });
+    this.lastTime = performance.now();
+    this.loop();
+  }
+  loop() {
+    const now = performance.now();
+    const dt  = (now - this.lastTime) / 1000;
+    this.lastTime = now;
+    const t = 1 - Math.pow(1 - this.smoothness, dt * 60);
+    this.currentScroll += (this.targetScroll - this.currentScroll) * t;
+    window.scrollTo(0, this.currentScroll);
+    requestAnimationFrame(this.loop.bind(this));
+  }
+  restart(pos = 0) {
+    this.targetScroll = this.currentScroll = pos;
+    window.scrollTo(0, pos);
+  }
+  destroy() {
+    window.removeEventListener('wheel', this._binded.onWheel);
+    document.body.style.overflow = '';
+  }
+}
+
+// expose it globally
+window.CustomSmoothScroll = CustomSmoothScroll;
+
   // ─────────── GHL-Specific Helpers ───────────
 
   /** Fires cb on initial load and every SPA nav change in GoHighLevel */

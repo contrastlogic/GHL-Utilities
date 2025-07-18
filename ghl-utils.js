@@ -148,24 +148,34 @@ window.CustomSmoothScroll = CustomSmoothScroll;
     setTimeout(cb, 500);
   }
 
-  /** Wraps all top-level <div>s into a smoother wrapper for GSAP ScrollSmoother */
-  static wrapGHLPageContent({
-    wrapperId      = 'smooth-wrapper',
-    contentId      = 'smooth-content',
-    targetSelector = `body > div:not(script):not(style):not(#${wrapperId}):not(#${contentId})`
-  } = {}) {
-    if (this.getById(wrapperId)) return;
-    const w = document.createElement('div'); w.id = wrapperId;
-    const c = document.createElement('div'); c.id = contentId;
-    const els = Array.from(document.querySelectorAll(targetSelector));
-    if (!els.length) {
-      console.warn(`[GHLUtility] wrap: no elements matched ${targetSelector}`);
-      return;
-    }
-    els.forEach(el => c.appendChild(el));
-    w.appendChild(c);
-    document.body.appendChild(w);
+/** Wraps all top-level <div>s into a smoother wrapper for GSAP ScrollSmoother */
+static wrapGHLPageContent({
+  wrapperId      = 'smooth-wrapper',
+  contentId      = 'smooth-content',
+  targetSelector = `body > div:not(script):not(style):not(#${wrapperId}):not(#${contentId})`,
+  excludeSelector = ''
+} = {}) {
+  if (this.getById(wrapperId)) return;
+
+  const w = document.createElement('div');
+  w.id = wrapperId;
+
+  const c = document.createElement('div');
+  c.id = contentId;
+
+  // Get all target elements
+  const els = Array.from(document.querySelectorAll(targetSelector))
+    .filter(el => !excludeSelector || !el.matches(excludeSelector));
+
+  if (!els.length) {
+    console.warn(`[GHLUtility] wrap: no elements matched ${targetSelector}`);
+    return;
   }
+
+  els.forEach(el => c.appendChild(el));
+  w.appendChild(c);
+  document.body.appendChild(w);
+}
 
   /** Polls until selector matches an element, then fires cb(el) */
   static waitForEl(selector, cb, timeout = 7000) {
